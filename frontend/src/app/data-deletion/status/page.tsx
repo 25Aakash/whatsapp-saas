@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/api";
 
-export default function DeletionStatusPage() {
+function DeletionStatusContent() {
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
 
@@ -121,5 +121,13 @@ export default function DeletionStatusPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function DeletionStatusPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><div className="animate-spin h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full" /></div>}>
+      <DeletionStatusContent />
+    </Suspense>
   );
 }
