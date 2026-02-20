@@ -64,7 +64,7 @@ export default function RegisterPage() {
         <div>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-lg font-bold">
-              W
+              K
             </div>
             <span className="text-2xl font-bold">Karssoft Connect</span>
           </div>

@@ -67,7 +67,7 @@ export default function LoginPage() {
         <div>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-lg font-bold">
-              W
+              K
             </div>
             <span className="text-2xl font-bold">Karssoft Connect</span>
           </div>
@@ -114,7 +114,7 @@ export default function LoginPage() {
           <div className="lg:hidden mb-8">
             <div className="flex items-center gap-3 mb-2">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white text-lg font-bold">
-                W
+                K
               </div>
               <span className="text-2xl font-bold text-gray-900">Karssoft Connect</span>
             </div>
