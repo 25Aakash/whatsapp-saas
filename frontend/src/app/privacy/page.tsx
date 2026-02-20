@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy - WhatsApp SaaS Platform",
-  description: "Privacy Policy for the WhatsApp SaaS Platform",
+  title: "Privacy Policy - Karssoft Connect",
+  description: "Privacy Policy for Karssoft Connect",
 };
 
 export default function PrivacyPolicyPage() {
@@ -18,7 +18,7 @@ export default function PrivacyPolicyPage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold text-white">
               W
             </div>
-            <span className="text-xl font-bold text-gray-900">WA SaaS</span>
+            <span className="text-xl font-bold text-gray-900">Karssoft Connect</span>
           </Link>
           <nav className="flex items-center gap-6 text-sm text-gray-500">
             <Link href="/terms" className="hover:text-gray-900 transition-colors">
@@ -40,7 +40,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-xl font-semibold text-gray-900">1. Introduction</h2>
             <p className="mt-3">
-              WA SaaS Platform (&quot;we&quot;, &quot;our&quot;, or &quot;the Platform&quot;) provides a
+              Karssoft Connect (&quot;we&quot;, &quot;our&quot;, or &quot;the Platform&quot;) provides a
               multi-tenant WhatsApp Business messaging management service built on the WhatsApp Cloud
               API. This Privacy Policy describes how we collect, use, store, and protect your
               information when you use our platform.
@@ -219,7 +219,7 @@ export default function PrivacyPolicyPage() {
               contact us at:
             </p>
             <div className="mt-3 rounded-lg bg-gray-50 p-4 text-sm">
-              <p className="font-medium text-gray-900">WA SaaS Platform</p>
+              <p className="font-medium text-gray-900">Karssoft Connect</p>
               <p className="mt-1 text-gray-600">
                 Email: karssoft1@gmail.com
               </p>
@@ -239,7 +239,7 @@ export default function PrivacyPolicyPage() {
               Terms of Service
             </Link>
           </div>
-          <p className="mt-3">&copy; {new Date().getFullYear()} WA SaaS Platform. All rights reserved.</p>
+          <p className="mt-3">&copy; {new Date().getFullYear()} Karssoft Connect. All rights reserved.</p>
         </div>
       </footer>
     </div>

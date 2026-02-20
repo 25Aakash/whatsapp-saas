@@ -70,7 +70,7 @@ function DataDeletionContent() {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold text-white">
               W
             </div>
-            <span className="text-xl font-bold text-gray-900">WA SaaS</span>
+            <span className="text-xl font-bold text-gray-900">Karssoft Connect</span>
           </Link>
           <nav className="flex items-center gap-6 text-sm text-gray-500">
             <Link href="/privacy" className="hover:text-gray-900 transition-colors">
@@ -231,7 +231,7 @@ function DataDeletionContent() {
               Terms of Service
             </Link>
           </div>
-          <p className="mt-3">&copy; {new Date().getFullYear()} WA SaaS Platform. All rights reserved.</p>
+          <p className="mt-3">&copy; {new Date().getFullYear()} Karssoft Connect. All rights reserved.</p>
         </div>
       </footer>
     </div>

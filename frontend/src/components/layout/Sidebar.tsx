@@ -61,7 +61,7 @@ export function Sidebar() {
         </div>
         <div>
           <span className="text-lg font-semibold text-gray-900 dark:text-white">
-            WA SaaS
+            Karssoft Connect
           </span>
           {isAdmin && (
             <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-medium dark:bg-purple-900/30 dark:text-purple-400">

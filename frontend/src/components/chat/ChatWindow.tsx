@@ -47,7 +47,7 @@ export function ChatWindow() {
             <Phone className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-            WhatsApp SaaS Platform
+            Karssoft Connect
           </h3>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Select a conversation to start messaging

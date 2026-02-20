@@ -7,8 +7,8 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: {
-    default: "WA SaaS - WhatsApp Business Platform",
-    template: "%s - WA SaaS",
+    default: "Karssoft Connect - WhatsApp Business Platform",
+    template: "%s - Karssoft Connect",
   },
   description:
     "Multi-tenant WhatsApp Cloud API management platform. Send, receive, and manage WhatsApp Business conversations at scale.",
@@ -20,9 +20,9 @@ export const metadata: Metadata = {
     "Messaging",
     "Multi-tenant",
   ],
-  authors: [{ name: "WA SaaS Platform" }],
+  authors: [{ name: "Karssoft Connect" }],
   openGraph: {
-    title: "WA SaaS - WhatsApp Business Platform",
+    title: "Karssoft Connect - WhatsApp Business Platform",
     description:
       "Manage all your WhatsApp Business conversations in one powerful platform.",
     type: "website",

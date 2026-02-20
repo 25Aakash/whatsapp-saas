@@ -69,7 +69,7 @@ export default function LoginPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-lg font-bold">
               W
             </div>
-            <span className="text-2xl font-bold">WA SaaS</span>
+            <span className="text-2xl font-bold">Karssoft Connect</span>
           </div>
         </div>
 
@@ -116,7 +116,7 @@ export default function LoginPage() {
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white text-lg font-bold">
                 W
               </div>
-              <span className="text-2xl font-bold text-gray-900">WA SaaS</span>
+              <span className="text-2xl font-bold text-gray-900">Karssoft Connect</span>
             </div>
           </div>
 

@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service - WhatsApp SaaS Platform",
-  description: "Terms of Service for the WhatsApp SaaS Platform",
+  title: "Terms of Service - Karssoft Connect",
+  description: "Terms of Service for Karssoft Connect",
 };
 
 export default function TermsOfServicePage() {
@@ -18,7 +18,7 @@ export default function TermsOfServicePage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold text-white">
               W
             </div>
-            <span className="text-xl font-bold text-gray-900">WA SaaS</span>
+            <span className="text-xl font-bold text-gray-900">Karssoft Connect</span>
           </Link>
           <nav className="flex items-center gap-6 text-sm text-gray-500">
             <Link href="/privacy" className="hover:text-gray-900 transition-colors">
@@ -40,7 +40,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-xl font-semibold text-gray-900">1. Acceptance of Terms</h2>
             <p className="mt-3">
-              By accessing or using the WA SaaS Platform (&quot;the Service&quot;), you agree to be
+              By accessing or using the Karssoft Connect (&quot;the Service&quot;), you agree to be
               bound by these Terms of Service. If you are using the Service on behalf of an
               organization, you represent that you have the authority to bind that organization to
               these terms. If you do not agree to these terms, you may not use the Service.
@@ -50,7 +50,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-xl font-semibold text-gray-900">2. Description of Service</h2>
             <p className="mt-3">
-              WA SaaS Platform is a multi-tenant messaging management platform that enables
+              Karssoft Connect is a multi-tenant messaging management platform that enables
               businesses to send, receive, and manage WhatsApp conversations using the official
               WhatsApp Cloud API provided by Meta Platforms, Inc. The Service includes:
             </p>
@@ -211,8 +211,8 @@ export default function TermsOfServicePage() {
               If you have any questions about these Terms, please contact us at:
             </p>
             <div className="mt-3 rounded-lg bg-gray-50 p-4 text-sm">
-              <p className="font-medium text-gray-900">WA SaaS Platform</p>
-              <p className="mt-1 text-gray-600">Email: support@whatsapp-saas.com</p>
+              <p className="font-medium text-gray-900">Karssoft Connect</p>
+              <p className="mt-1 text-gray-600">Email: karssoft1@gmail.com</p>
             </div>
           </section>
         </div>
@@ -229,7 +229,7 @@ export default function TermsOfServicePage() {
               Terms of Service
             </Link>
           </div>
-          <p className="mt-3">&copy; {new Date().getFullYear()} WA SaaS Platform. All rights reserved.</p>
+          <p className="mt-3">&copy; {new Date().getFullYear()} Karssoft Connect. All rights reserved.</p>
         </div>
       </footer>
     </div>

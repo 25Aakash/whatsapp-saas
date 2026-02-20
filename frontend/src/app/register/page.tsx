@@ -66,7 +66,7 @@ export default function RegisterPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-lg font-bold">
               W
             </div>
-            <span className="text-2xl font-bold">WA SaaS</span>
+            <span className="text-2xl font-bold">Karssoft Connect</span>
           </div>
         </div>
 
