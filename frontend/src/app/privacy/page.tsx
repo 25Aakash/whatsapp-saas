@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold text-white">
-              W
+              K
             </div>
             <span className="text-xl font-bold text-gray-900">Karssoft Connect</span>
           </Link>

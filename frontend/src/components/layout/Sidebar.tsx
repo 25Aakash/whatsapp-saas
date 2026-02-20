@@ -57,7 +57,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex h-16 items-center gap-3 border-b border-gray-200 px-6 dark:border-gray-700">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white font-bold text-sm">
-          W
+          K
         </div>
         <div>
           <span className="text-lg font-semibold text-gray-900 dark:text-white">
