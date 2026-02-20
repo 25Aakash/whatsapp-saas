@@ -221,7 +221,7 @@ export default function PrivacyPolicyPage() {
             <div className="mt-3 rounded-lg bg-gray-50 p-4 text-sm">
               <p className="font-medium text-gray-900">WA SaaS Platform</p>
               <p className="mt-1 text-gray-600">
-                Email: privacy@whatsapp-saas.com
+                Email: karssoft1@gmail.com
               </p>
             </div>
           </section>
