@@ -11,10 +11,11 @@ import { MessageSquare, Shield, Zap } from "lucide-react";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [twoFactorToken, setTwoFactorToken] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { login, isAuthenticated, isLoading, loadUser, user } = useAuthStore();
+  const { login, isAuthenticated, isLoading, loadUser, user, requires2FA, pendingLoginEmail, pendingLoginPassword, clear2FA } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
@@ -38,8 +39,11 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      await login(email, password);
-      // Redirect handled by useEffect above
+      if (requires2FA && pendingLoginEmail && pendingLoginPassword) {
+        await login(pendingLoginEmail, pendingLoginPassword, twoFactorToken);
+      } else {
+        await login(email, password);
+      }
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       setError(error.response?.data?.message || "Invalid credentials");
@@ -154,6 +158,30 @@ export default function LoginPage() {
                 required
               />
             </div>
+
+            {requires2FA && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Two-Factor Code
+                </label>
+                <Input
+                  type="text"
+                  value={twoFactorToken}
+                  onChange={(e) => setTwoFactorToken(e.target.value)}
+                  placeholder="Enter 6-digit code from authenticator"
+                  required
+                  autoFocus
+                  maxLength={6}
+                  pattern="[0-9]{6}"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Enter the code from your authenticator app.{" "}
+                  <button type="button" onClick={clear2FA} className="text-emerald-600 hover:underline">
+                    Back to login
+                  </button>
+                </p>
+              </div>
+            )}
 
             <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
               {isSubmitting ? (

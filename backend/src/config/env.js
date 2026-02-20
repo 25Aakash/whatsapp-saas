@@ -18,6 +18,19 @@ const env = {
   whatsappVerifyToken: process.env.WHATSAPP_VERIFY_TOKEN,
   webhookCallbackUrl: process.env.WEBHOOK_CALLBACK_URL,
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+  // Comma-separated list of allowed origins (e.g., "https://app.example.com,https://admin.example.com")
+  corsOrigins: process.env.CORS_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:3000,https://localhost:3000',
+
+  // SMTP / Email
+  smtpHost: process.env.SMTP_HOST || '',
+  smtpPort: parseInt(process.env.SMTP_PORT, 10) || 587,
+  smtpUser: process.env.SMTP_USER || '',
+  smtpPass: process.env.SMTP_PASS || '',
+  smtpFrom: process.env.SMTP_FROM || 'noreply@yourdomain.com',
+
+  // Sandbox / test mode
+  sandboxMode: process.env.SANDBOX_MODE === 'true',
+
   isDev: process.env.NODE_ENV === 'development',
   isProd: process.env.NODE_ENV === 'production',
 };
@@ -31,6 +44,8 @@ if (env.isProd) {
     'WHATSAPP_VERIFY_TOKEN',
     'META_APP_ID',
     'META_APP_SECRET',
+    'FRONTEND_URL',
+    'WEBHOOK_CALLBACK_URL',
   ];
   const missing = required.filter((key) => !process.env[key]);
   if (missing.length > 0) {

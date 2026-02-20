@@ -1,0 +1,86 @@
+version: "3.8"
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7
+    container_name: wa-saas-mongodb
+    restart: unless-stopped
+    # Do NOT expose ports externally in production — only accessible within Docker network
+    # ports:
+    #   - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: whatsapp-saas
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    networks:
+      - wa-saas-network
+
+  # Redis (for BullMQ queues)
+  redis:
+    image: redis:7-alpine
+    container_name: wa-saas-redis
+    restart: unless-stopped
+    # Do NOT expose ports externally in production
+    # ports:
+    #   - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    networks:
+      - wa-saas-network
+
+  # Backend API + Workers
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: wa-saas-backend
+    restart: unless-stopped
+    # Only expose to localhost — Nginx will reverse proxy
+    ports:
+      - "127.0.0.1:5000:5000"
+    env_file:
+      - ./backend/.env
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongodb:27017/whatsapp-saas?authSource=admin
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      FRONTEND_URL: https://app.karssoft.com
+      CORS_ORIGINS: https://app.karssoft.com
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - wa-saas-network
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://app.karssoft.com/api/v1
+        NEXT_PUBLIC_SOCKET_URL: https://app.karssoft.com
+    container_name: wa-saas-frontend
+    restart: unless-stopped
+    # Only expose to localhost — Nginx will reverse proxy
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: https://app.karssoft.com/api/v1
+      NEXT_PUBLIC_SOCKET_URL: https://app.karssoft.com
+    depends_on:
+      - backend
+    networks:
+      - wa-saas-network
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  wa-saas-network:
+    driver: bridge

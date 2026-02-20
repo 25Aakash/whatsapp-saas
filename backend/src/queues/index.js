@@ -4,6 +4,7 @@ const { getRedisConnection } = require('../config/redis');
 let inboundQueue = null;
 let statusQueue = null;
 let outboundQueue = null;
+let campaignQueue = null;
 
 const getQueues = () => {
   const connection = getRedisConnection();
@@ -44,7 +45,18 @@ const getQueues = () => {
     });
   }
 
-  return { inboundQueue, statusQueue, outboundQueue };
+  if (!campaignQueue) {
+    campaignQueue = new Queue('campaigns', {
+      connection,
+      defaultJobOptions: {
+        attempts: 1,
+        removeOnComplete: { count: 100 },
+        removeOnFail: { count: 500 },
+      },
+    });
+  }
+
+  return { inboundQueue, statusQueue, outboundQueue, campaignQueue };
 };
 
 module.exports = { getQueues };

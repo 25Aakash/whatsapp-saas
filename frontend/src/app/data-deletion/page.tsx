@@ -1,18 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import api from "@/lib/api";
 
 export default function DataDeletionPage() {
+  const searchParams = useSearchParams();
+  const codeFromUrl = searchParams.get("code");
+
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [confirmationCode, setConfirmationCode] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Status lookup state (when redirected from Meta's data deletion callback)
+  const [statusData, setStatusData] = useState<{
+    confirmation_code: string;
+    status: string;
+    message: string;
+  } | null>(null);
+  const [statusLoading, setStatusLoading] = useState(false);
+  const [statusError, setStatusError] = useState("");
+
+  // If a confirmation code is in the URL, look up the deletion status
+  useEffect(() => {
+    if (codeFromUrl) {
+      setStatusLoading(true);
+      api
+        .get(`/data-deletion/status?code=${encodeURIComponent(codeFromUrl)}`)
+        .then((res) => {
+          setStatusData(res.data);
+        })
+        .catch(() => {
+          setStatusError("Unable to retrieve deletion status. Please contact support.");
+        })
+        .finally(() => {
+          setStatusLoading(false);
+        });
+    }
+  }, [codeFromUrl]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    setSubmitted(true);
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      const res = await api.post("/data-deletion/by-email", { email });
+      setConfirmationCode(res.data.confirmation_code || `DEL-${Date.now().toString(36).toUpperCase()}`);
+      setSubmitted(true);
+    } catch {
+      setError("Failed to process deletion request. Please try again or contact support.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -39,6 +85,46 @@ export default function DataDeletionPage() {
 
       {/* Content */}
       <main className="mx-auto max-w-2xl px-6 py-16">
+        {/* Status lookup view (when redirected from Meta's callback) */}
+        {codeFromUrl ? (
+          <>
+            <h1 className="text-3xl font-bold text-gray-900">Data Deletion Status</h1>
+            {statusLoading ? (
+              <div className="mt-8 flex items-center justify-center py-12">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+              </div>
+            ) : statusError ? (
+              <div className="mt-8 rounded-lg bg-red-50 border border-red-200 px-6 py-4 text-red-700">
+                {statusError}
+              </div>
+            ) : statusData ? (
+              <div className="mt-8 rounded-xl border border-emerald-200 bg-emerald-50 p-8 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+                  <svg className="h-6 w-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h2 className="mt-4 text-lg font-semibold text-gray-900">
+                  {statusData.status === "completed" ? "Deletion Complete" : "Deletion In Progress"}
+                </h2>
+                <p className="mt-2 text-sm text-gray-600">{statusData.message}</p>
+                <p className="mt-4 text-xs text-gray-500">
+                  Confirmation Code: {statusData.confirmation_code}
+                </p>
+              </div>
+            ) : null}
+
+            <div className="mt-8">
+              <p className="text-sm text-gray-600">
+                Want to submit a new deletion request?{" "}
+                <Link href="/data-deletion" className="text-emerald-600 hover:underline">
+                  Click here
+                </Link>
+              </p>
+            </div>
+          </>
+        ) : (
+        <>
         <h1 className="text-3xl font-bold text-gray-900">Data Deletion Request</h1>
         <p className="mt-3 text-gray-600">
           In accordance with our{" "}
@@ -86,8 +172,18 @@ export default function DataDeletionPage() {
               </ul>
             </div>
 
-            <Button type="submit" className="w-full" size="lg">
-              Submit Deletion Request
+            {error && (
+              <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600 border border-red-200">
+                {error}
+              </div>
+            )}
+
+            <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                "Submit Deletion Request"
+              )}
             </Button>
           </form>
         ) : (
@@ -102,11 +198,10 @@ export default function DataDeletionPage() {
             </h2>
             <p className="mt-2 text-sm text-gray-600">
               We have received your data deletion request for <strong>{email}</strong>.
-              You will receive a confirmation email within 48 hours. Data deletion will be
-              completed within 30 days.
+              Your data has been permanently deleted from our systems.
             </p>
             <p className="mt-4 text-xs text-gray-500">
-              Reference ID: DEL-{Date.now().toString(36).toUpperCase()}
+              Reference ID: {confirmationCode}
             </p>
           </div>
         )}
@@ -121,6 +216,8 @@ export default function DataDeletionPage() {
             with the subject line &quot;Data Deletion Request&quot;.
           </p>
         </div>
+        </>
+        )}
       </main>
 
       {/* Footer */}

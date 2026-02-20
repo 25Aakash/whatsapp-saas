@@ -23,6 +23,7 @@ declare global {
         callback: (response: { status: string }) => void
       ) => void;
     };
+    _fbSDKLoaded?: boolean;
   }
 }
 
@@ -31,12 +32,28 @@ export function FacebookSDK() {
     const appId = process.env.NEXT_PUBLIC_META_APP_ID;
     if (!appId) return;
 
-    // Prevent double-initialization
-    if (document.getElementById("facebook-jssdk")) return;
+    // If FB is already available (loaded in a prior render), skip
+    if (window.FB) return;
+
+    // If we already started loading, just make sure fbAsyncInit is set
+    if (window._fbSDKLoaded) {
+      window.fbAsyncInit = function () {
+        window.FB.init({
+          appId,
+          cookie: true,
+          xfbml: true,
+          version: "v21.0",
+        });
+      };
+      return;
+    }
+
+    // Mark that we've started loading — never remove the script
+    window._fbSDKLoaded = true;
 
     window.fbAsyncInit = function () {
       window.FB.init({
-        appId: appId,
+        appId,
         cookie: true,
         xfbml: true,
         version: "v21.0",
@@ -51,12 +68,7 @@ export function FacebookSDK() {
     script.crossOrigin = "anonymous";
     document.body.appendChild(script);
 
-    return () => {
-      const existingScript = document.getElementById("facebook-jssdk");
-      if (existingScript) {
-        existingScript.remove();
-      }
-    };
+    // No cleanup — the SDK must persist across navigations
   }, []);
 
   return null;

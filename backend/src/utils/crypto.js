@@ -54,4 +54,58 @@ const verifyWebhookSignature = (payload, signature, secret) => {
   );
 };
 
-module.exports = { encrypt, decrypt, verifyWebhookSignature };
+/**
+ * Verify and parse Meta's signed_request parameter
+ * Used for data deletion callbacks and deauthorization
+ * @param {string} signedRequest - The signed_request from Meta
+ * @param {string} appSecret - The Meta App Secret
+ * @returns {{ isValid: boolean, payload: object|null }}
+ */
+const verifySignedRequest = (signedRequest, appSecret) => {
+  if (!signedRequest || !appSecret) {
+    return { isValid: false, payload: null };
+  }
+
+  try {
+    const [encodedSig, encodedPayload] = signedRequest.split('.');
+    if (!encodedSig || !encodedPayload) {
+      return { isValid: false, payload: null };
+    }
+
+    // Decode the signature
+    const sig = Buffer.from(
+      encodedSig.replace(/-/g, '+').replace(/_/g, '/'),
+      'base64'
+    );
+
+    // Compute expected signature
+    const expectedSig = crypto
+      .createHmac('sha256', appSecret)
+      .update(encodedPayload)
+      .digest();
+
+    // Timing-safe comparison
+    if (sig.length !== expectedSig.length) {
+      return { isValid: false, payload: null };
+    }
+    const isValid = crypto.timingSafeEqual(sig, expectedSig);
+
+    if (!isValid) {
+      return { isValid: false, payload: null };
+    }
+
+    // Decode payload
+    const payload = JSON.parse(
+      Buffer.from(
+        encodedPayload.replace(/-/g, '+').replace(/_/g, '/'),
+        'base64'
+      ).toString('utf8')
+    );
+
+    return { isValid: true, payload };
+  } catch {
+    return { isValid: false, payload: null };
+  }
+};
+
+module.exports = { encrypt, decrypt, verifyWebhookSignature, verifySignedRequest };

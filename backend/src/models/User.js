@@ -44,12 +44,22 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    twoFactorSecret: {
+      type: String,
+      select: false,
+      default: null,
+    },
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
     toJSON: {
       transform(doc, ret) {
         delete ret.password;
+        delete ret.twoFactorSecret;
         return ret;
       },
     },

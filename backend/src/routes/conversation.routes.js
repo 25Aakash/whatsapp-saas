@@ -18,4 +18,13 @@ router.put('/:id/read', conversationController.markRead);
 // Assign agent
 router.put('/:id/assign', conversationController.assignAgent);
 
+// Update tags
+router.put('/:id/tags', conversationController.updateTags);
+
+// Update notes
+router.put('/:id/notes', conversationController.updateNotes);
+
+// Close conversation
+router.put('/:id/close', conversationController.closeConversation);
+
 module.exports = router;

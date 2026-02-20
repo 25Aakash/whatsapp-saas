@@ -7,6 +7,7 @@ const { getRedisConnection } = require('../config/redis');
 const { startInboundWorker, setIOGetter: setInboundIO } = require('./inbound.worker');
 const { startStatusWorker, setIOGetter: setStatusIO } = require('./status.worker');
 const { startOutboundWorker } = require('./outbound.worker');
+const { startCampaignWorker } = require('./campaign.worker');
 const logger = require('../utils/logger');
 
 const startWorkers = async (ioGetter = null) => {
@@ -26,10 +27,11 @@ const startWorkers = async (ioGetter = null) => {
   const inbound = startInboundWorker();
   const status = startStatusWorker();
   const outbound = startOutboundWorker();
+  const campaign = startCampaignWorker();
 
   logger.info('All workers started successfully');
 
-  return { inbound, status, outbound };
+  return { inbound, status, outbound, campaign };
 };
 
 // If running as standalone process

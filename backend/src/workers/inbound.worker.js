@@ -2,6 +2,12 @@ const { Worker } = require('bullmq');
 const { getRedisConnection } = require('../config/redis');
 const messageService = require('../services/message.service');
 const tenantService = require('../services/tenant.service');
+const autoReplyService = require('../services/autoReply.service');
+const contactService = require('../services/contact.service');
+const { forwardWebhookEvent } = require('../services/webhook.service');
+const { trackMessageUsage } = require('../middlewares/usage.middleware');
+const whatsappService = require('../services/whatsapp.service');
+const flowService = require('../services/flow.service');
 const logger = require('../utils/logger');
 
 let inboundWorker = null;
@@ -95,6 +101,19 @@ const processInboundMessage = async (job) => {
     if (result) {
       logger.info(`Inbound message saved: ${message.id} for tenant ${tenant._id}`);
 
+      // Track usage
+      trackMessageUsage(tenant._id, 'inbound', type);
+
+      // Upsert contact
+      try {
+        await contactService.upsertContact(tenant._id, {
+          phone: message.from,
+          name: contact?.profile?.name || '',
+        });
+      } catch (contactErr) {
+        logger.debug('Contact upsert error:', contactErr.message);
+      }
+
       // Emit Socket.IO event
       if (ioGetter) {
         try {
@@ -109,6 +128,69 @@ const processInboundMessage = async (job) => {
         } catch (socketErr) {
           logger.debug('Socket emit skipped (not initialized)');
         }
+      }
+
+      // Forward webhook event to tenant's URL
+      forwardWebhookEvent(tenant._id, {
+        type: 'message.received',
+        data: {
+          messageId: result.message._id,
+          waMessageId: message.id,
+          from: message.from,
+          type,
+          body,
+          timestamp: message.timestamp,
+          conversationId: result.conversation._id,
+        },
+      });
+
+      // Flow engine evaluation (takes priority over auto-reply)
+      let flowHandled = false;
+      try {
+        flowHandled = await flowService.handleInboundForFlow(
+          tenant._id.toString(),
+          tenant.phoneNumberId,
+          message.from,
+          body,
+          result.conversation._id.toString()
+        );
+        if (flowHandled) {
+          logger.info(`Flow engine handled message ${message.id}`);
+        }
+      } catch (flowErr) {
+        logger.debug('Flow engine error:', flowErr.message);
+      }
+
+      // Auto-reply evaluation (skip if flow already handled)
+      if (!flowHandled) try {
+        const isNewConversation = result.conversation.createdAt &&
+          (new Date() - new Date(result.conversation.createdAt)) < 5000; // Within 5s of creation
+
+        const matchingRule = await autoReplyService.evaluateRules(
+          tenant._id.toString(),
+          body,
+          result.conversation._id.toString()
+        );
+
+        if (matchingRule) {
+          if (matchingRule.action.type === 'text_reply' && matchingRule.action.message) {
+            // Send auto-reply text
+            await whatsappService.sendTextMessage(
+              tenant._id, tenant.phoneNumberId, message.from, matchingRule.action.message
+            );
+            // Save auto-reply message
+            await messageService.saveOutboundAutoReply({
+              tenantId: tenant._id,
+              conversationId: result.conversation._id,
+              body: matchingRule.action.message,
+              to: message.from,
+              phoneNumberId: tenant.phoneNumberId,
+            });
+            logger.info(`Auto-reply sent for rule: ${matchingRule.name}`);
+          }
+        }
+      } catch (autoReplyErr) {
+        logger.debug('Auto-reply evaluation error:', autoReplyErr.message);
       }
     }
   } catch (error) {

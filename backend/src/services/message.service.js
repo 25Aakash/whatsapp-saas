@@ -167,6 +167,30 @@ const sendTemplateMessage = async ({
 };
 
 /**
+ * Save an auto-reply outbound message (used by inbound worker)
+ */
+const saveOutboundAutoReply = async ({ tenantId, conversationId, body, to, phoneNumberId }) => {
+  const message = await Message.create({
+    tenant: tenantId,
+    conversation: conversationId,
+    direction: 'outbound',
+    type: 'text',
+    body,
+    status: 'sent',
+    statusTimestamps: { sent: new Date() },
+    timestamp: new Date(),
+  });
+
+  await conversationService.updateConversationForMessage(conversationId, {
+    body,
+    direction: 'outbound',
+    timestamp: message.timestamp,
+  });
+
+  return message;
+};
+
+/**
  * Update message status (from webhook status update)
  */
 const updateMessageStatus = async (waMessageId, status, timestamp, errorInfo = null) => {
@@ -237,6 +261,7 @@ module.exports = {
   saveInboundMessage,
   sendTextMessage,
   sendTemplateMessage,
+  saveOutboundAutoReply,
   updateMessageStatus,
   getMessages,
 };

@@ -6,9 +6,9 @@ const { apiResponse } = require('../utils/helpers');
  */
 const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-    const result = await authService.login(email, password);
-    return apiResponse(res, 200, 'Login successful', result);
+    const { email, password, twoFactorToken } = req.body;
+    const result = await authService.login(email, password, twoFactorToken);
+    return apiResponse(res, 200, result.requires2FA ? '2FA verification required' : 'Login successful', result);
   } catch (error) {
     next(error);
   }
@@ -84,4 +84,40 @@ const removeTeamMember = async (req, res, next) => {
   }
 };
 
-module.exports = { login, customerRegister, register, getMe, getTeamMembers, removeTeamMember };
+/**
+ * POST /api/v1/auth/2fa/enable
+ */
+const enable2FA = async (req, res, next) => {
+  try {
+    const result = await authService.enable2FA(req.user._id);
+    return apiResponse(res, 200, 'Scan QR code with authenticator app', result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /api/v1/auth/2fa/verify
+ */
+const verify2FA = async (req, res, next) => {
+  try {
+    const result = await authService.verify2FA(req.user._id, req.body.token);
+    return apiResponse(res, 200, '2FA enabled successfully', result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /api/v1/auth/2fa/disable
+ */
+const disable2FA = async (req, res, next) => {
+  try {
+    const result = await authService.disable2FA(req.user._id, req.body.token);
+    return apiResponse(res, 200, '2FA disabled', result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { login, customerRegister, register, getMe, getTeamMembers, removeTeamMember, enable2FA, verify2FA, disable2FA };

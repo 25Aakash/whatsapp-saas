@@ -53,4 +53,9 @@ router.put('/:id', authorize('admin'), tenantController.updateTenant);
 // Admin: deactivate tenant
 router.delete('/:id', authorize('admin'), tenantController.deleteTenant);
 
+// Admin: credit management
+router.get('/:id/credits', authorize('admin'), tenantController.getCredits);
+router.post('/:id/credits', authorize('admin'), tenantController.setCredits);
+router.put('/:id/cost-per-message', authorize('admin'), tenantController.setCostPerMessage);
+
 module.exports = router;

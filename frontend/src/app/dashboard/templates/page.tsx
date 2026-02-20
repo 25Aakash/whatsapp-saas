@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { templateAPI } from "@/lib/api";
-import { RefreshCw, FileText, CheckCircle, Clock, XCircle } from "lucide-react";
+import { RefreshCw, FileText, CheckCircle, Clock, XCircle, Plus, Trash2, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Template {
@@ -19,6 +19,14 @@ export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+
+  // Create form
+  const [tplName, setTplName] = useState("");
+  const [tplCategory, setTplCategory] = useState("MARKETING");
+  const [tplLanguage, setTplLanguage] = useState("en_US");
+  const [tplBody, setTplBody] = useState("");
 
   useEffect(() => {
     loadTemplates();
@@ -48,6 +56,36 @@ export default function TemplatesPage() {
     }
   };
 
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setCreating(true);
+      await templateAPI.create({
+        name: tplName,
+        category: tplCategory,
+        language: tplLanguage,
+        components: [{ type: "BODY", text: tplBody }],
+      });
+      setShowCreate(false);
+      setTplName(""); setTplBody("");
+      loadTemplates();
+    } catch (err) {
+      console.error("Failed to create template:", err);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this template? This will also delete it from Meta.")) return;
+    try {
+      await templateAPI.delete(id);
+      loadTemplates();
+    } catch (err) {
+      console.error("Failed to delete template:", err);
+    }
+  };
+
   const statusIcon = (status: string) => {
     switch (status?.toUpperCase()) {
       case "APPROVED":
@@ -72,15 +110,21 @@ export default function TemplatesPage() {
             Manage your WhatsApp message templates
           </p>
         </div>
-        <Button
-          onClick={handleSync}
-          disabled={isSyncing}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
-          {isSyncing ? "Syncing..." : "Sync from Meta"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleSync}
+            disabled={isSyncing}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
+            {isSyncing ? "Syncing..." : "Sync from Meta"}
+          </Button>
+          <Button onClick={() => setShowCreate(true)} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Create Template
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -117,9 +161,69 @@ export default function TemplatesPage() {
               <div className="flex items-center gap-3 text-xs text-gray-400">
                 <span className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">{tpl.language}</span>
                 <span className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">{tpl.category}</span>
+                <button onClick={() => handleDelete(tpl._id)} className="ml-auto text-gray-400 hover:text-red-600">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Create Template Modal */}
+      {showCreate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Create Template</h2>
+              <button onClick={() => setShowCreate(false)}><X className="h-5 w-5 text-gray-400" /></button>
+            </div>
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Template Name *</label>
+                <input required type="text" value={tplName} onChange={(e) => setTplName(e.target.value)}
+                  placeholder="e.g. order_confirmation"
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+                  <select value={tplCategory} onChange={(e) => setTplCategory(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+                    <option value="MARKETING">Marketing</option>
+                    <option value="UTILITY">Utility</option>
+                    <option value="AUTHENTICATION">Authentication</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Language</label>
+                  <select value={tplLanguage} onChange={(e) => setTplLanguage(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+                    <option value="en_US">English (US)</option>
+                    <option value="en_GB">English (UK)</option>
+                    <option value="hi">Hindi</option>
+                    <option value="es">Spanish</option>
+                    <option value="pt_BR">Portuguese (BR)</option>
+                    <option value="ar">Arabic</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Body Text *</label>
+                <textarea required rows={4} value={tplBody} onChange={(e) => setTplBody(e.target.value)}
+                  placeholder="Hello {{1}}, your order {{2}} is confirmed."
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
+                <p className="mt-1 text-xs text-gray-400">Use {"{{1}}"}, {"{{2}}"} etc. for variables</p>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
+                <Button type="submit" disabled={creating}>
+                  {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Submit to Meta
+                </Button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

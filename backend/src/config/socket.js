@@ -6,9 +6,12 @@ const logger = require('../utils/logger');
 let io = null;
 
 const initSocket = (httpServer) => {
+  // Use same CORS origins as Express
+  const allowedOrigins = env.corsOrigins.split(',').map((o) => o.trim()).filter(Boolean);
+
   io = new Server(httpServer, {
     cors: {
-      origin: env.frontendUrl,
+      origin: allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins,
       methods: ['GET', 'POST'],
       credentials: true,
     },

@@ -89,6 +89,23 @@ const handleEmbeddedSignup = async (code, tenantId = null) => {
       params: { fields: 'name,timezone_id,account_review_status' },
     });
 
+    // Step 5b: Get the Facebook user ID (needed for Meta data deletion callback)
+    let fbUserId = null;
+    try {
+      fbUserId = debugData.user_id || null;
+      if (!fbUserId) {
+        // Fallback: fetch from /me endpoint
+        const meResponse = await axios.get(`${META_GRAPH_URL}/me`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          params: { fields: 'id' },
+        });
+        fbUserId = meResponse.data.id || null;
+      }
+      logger.info(`Captured FB user ID during signup: ${fbUserId}`);
+    } catch (fbErr) {
+      logger.warn(`Could not fetch FB user ID during signup: ${fbErr.message}`);
+    }
+
     // Step 6: Create or update tenant with credentials
     const tenantData = {
       phoneNumberId: phone.id,
@@ -102,6 +119,7 @@ const handleEmbeddedSignup = async (code, tenantId = null) => {
         wabaId,
         businessName: wabaDetails.data.name || '',
         timezone: wabaDetails.data.timezone_id || '',
+        fbUserId,
       },
     };
 

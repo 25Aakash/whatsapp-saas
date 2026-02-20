@@ -30,4 +30,9 @@ router.get('/team', authenticate, authorize('admin', 'customer'), authController
 // Remove a team member
 router.delete('/team/:id', authenticate, authorize('admin', 'customer'), authController.removeTeamMember);
 
+// Two-Factor Authentication (TOTP)
+router.post('/2fa/enable', authenticate, authController.enable2FA);
+router.post('/2fa/verify', authenticate, authController.verify2FA);
+router.post('/2fa/disable', authenticate, authController.disable2FA);
+
 module.exports = router;

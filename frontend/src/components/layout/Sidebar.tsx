@@ -9,6 +9,14 @@ import {
   LogOut,
   Users,
   FileText,
+  BarChart3,
+  Contact,
+  Megaphone,
+  Shield,
+  Bot,
+  ShoppingBag,
+  Star,
+  Wifi,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store";
@@ -16,8 +24,15 @@ import { useAuthStore } from "@/store";
 const customerNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/dashboard/conversations", icon: MessageSquare, label: "Conversations" },
+  { href: "/dashboard/contacts", icon: Contact, label: "Contacts" },
+  { href: "/dashboard/campaigns", icon: Megaphone, label: "Campaigns" },
+  { href: "/dashboard/flows", icon: Bot, label: "Flows" },
+  { href: "/dashboard/catalog", icon: ShoppingBag, label: "Catalog" },
+  { href: "/dashboard/csat", icon: Star, label: "CSAT Surveys" },
+  { href: "/dashboard/analytics", icon: BarChart3, label: "Analytics" },
   { href: "/dashboard/team", icon: Users, label: "Team" },
   { href: "/dashboard/templates", icon: FileText, label: "Templates" },
+  { href: "/dashboard/tenants", icon: Wifi, label: "WhatsApp" },
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 
@@ -25,6 +40,7 @@ const adminNavItems = [
   { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/admin/customers", icon: Users, label: "Customers" },
   { href: "/admin/conversations", icon: MessageSquare, label: "All Conversations" },
+  { href: "/admin/audit-logs", icon: Shield, label: "Audit Logs" },
   { href: "/admin/settings", icon: Settings, label: "Settings" },
 ];
 

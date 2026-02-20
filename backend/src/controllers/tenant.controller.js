@@ -1,4 +1,5 @@
 const tenantService = require('../services/tenant.service');
+const billingService = require('../services/billing.service');
 const { apiResponse } = require('../utils/helpers');
 
 /**
@@ -136,6 +137,59 @@ const deleteTenant = async (req, res, next) => {
   }
 };
 
+/**
+ * POST /api/v1/tenants/:id/credits
+ * Admin: add or set credits for a tenant
+ * Body: { credits: number, mode?: 'add' | 'set' }
+ */
+const setCredits = async (req, res, next) => {
+  try {
+    const { credits, mode } = req.body;
+    if (credits === undefined || typeof credits !== 'number') {
+      return apiResponse(res, 400, 'credits (number) is required');
+    }
+    const tenant = await billingService.setCredits(req.params.id, credits, mode || 'add');
+    return apiResponse(res, 200, `Credits ${mode === 'set' ? 'set' : 'added'} successfully`, {
+      credits: tenant.credits,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/v1/tenants/:id/credits
+ * Admin: get credit balance for a tenant
+ */
+const getCredits = async (req, res, next) => {
+  try {
+    const data = await billingService.getCredits(req.params.id);
+    return apiResponse(res, 200, 'Credits fetched', data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * PUT /api/v1/tenants/:id/cost-per-message
+ * Admin: set cost per message for a tenant
+ * Body: { cost: number }
+ */
+const setCostPerMessage = async (req, res, next) => {
+  try {
+    const { cost } = req.body;
+    if (cost === undefined || typeof cost !== 'number') {
+      return apiResponse(res, 400, 'cost (number) is required');
+    }
+    const tenant = await billingService.setCostPerMessage(req.params.id, cost);
+    return apiResponse(res, 200, 'Cost per message updated', {
+      credits: tenant.credits,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getMyAccount,
   embeddedSignup,
@@ -146,4 +200,7 @@ module.exports = {
   checkStatus,
   updateTenant,
   deleteTenant,
+  setCredits,
+  getCredits,
+  setCostPerMessage,
 };

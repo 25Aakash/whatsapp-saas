@@ -71,6 +71,75 @@ const embeddedSignupSchema = z.object({
   code: z.string().min(1, 'Authorization code is required'),
 });
 
+// ============ New Feature Schemas ============
+
+const createApiKeySchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100),
+  permissions: z.array(z.string()).optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  allowedIps: z.array(z.string()).optional(),
+});
+
+const createContactSchema = z.object({
+  phone: z.string().min(1, 'Phone number is required'),
+  name: z.string().max(200).optional(),
+  email: z.string().email().optional().or(z.literal('')),
+  tags: z.array(z.string()).optional(),
+  groups: z.array(z.string()).optional(),
+  attributes: z.record(z.any()).optional(),
+  notes: z.string().optional(),
+});
+
+const createCampaignSchema = z.object({
+  name: z.string().min(1, 'Campaign name is required').max(200),
+  templateName: z.string().min(1, 'Template name is required'),
+  templateLanguage: z.string().min(1, 'Template language is required'),
+  templateComponents: z.array(z.any()).optional(),
+  audience: z.object({
+    type: z.enum(['all', 'tags', 'groups', 'contacts']).optional(),
+    tags: z.array(z.string()).optional(),
+    groups: z.array(z.string()).optional(),
+    contactIds: z.array(z.string()).optional(),
+  }).optional(),
+  scheduledAt: z.string().datetime().nullable().optional(),
+  phoneNumberId: z.string().optional(),
+});
+
+const createCannedResponseSchema = z.object({
+  shortcode: z.string().min(1).max(50),
+  title: z.string().min(1).max(100),
+  body: z.string().min(1).max(4096),
+  category: z.string().max(50).optional(),
+  variables: z.array(z.string()).optional(),
+});
+
+const createAutoReplySchema = z.object({
+  name: z.string().min(1).max(100),
+  trigger: z.object({
+    type: z.enum(['keyword', 'regex', 'first_message', 'out_of_hours', 'all']),
+    value: z.string().optional(),
+    caseSensitive: z.boolean().optional(),
+  }),
+  action: z.object({
+    type: z.enum(['text_reply', 'template_reply', 'assign_agent', 'add_tag']),
+    message: z.string().optional(),
+    templateName: z.string().optional(),
+    templateLanguage: z.string().optional(),
+    agentId: z.string().optional(),
+    tag: z.string().optional(),
+  }),
+  priority: z.number().min(1).max(100).optional(),
+  cooldownMinutes: z.number().min(0).optional(),
+});
+
+const createTemplateSchema = z.object({
+  name: z.string().min(1, 'Template name is required').max(512)
+    .regex(/^[a-z0-9_]+$/, 'Template name must be lowercase alphanumeric with underscores'),
+  language: z.string().min(2, 'Language code is required'),
+  category: z.enum(['UTILITY', 'MARKETING', 'AUTHENTICATION']),
+  components: z.array(z.any()).optional(),
+});
+
 module.exports = {
   validate,
   loginSchema,
@@ -80,4 +149,10 @@ module.exports = {
   sendTemplateSchema,
   createTenantSchema,
   embeddedSignupSchema,
+  createApiKeySchema,
+  createContactSchema,
+  createCampaignSchema,
+  createCannedResponseSchema,
+  createAutoReplySchema,
+  createTemplateSchema,
 };

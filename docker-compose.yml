@@ -12,6 +12,8 @@ services:
       - mongodb_data:/data/db
     environment:
       MONGO_INITDB_DATABASE: whatsapp-saas
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-waadmin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-changeme_mongo_password}
     networks:
       - wa-saas-network
 
@@ -24,7 +26,7 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme_redis_password}
     networks:
       - wa-saas-network
 
@@ -40,9 +42,9 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      MONGODB_URI: mongodb://mongodb:27017/whatsapp-saas
-      REDIS_URL: redis://redis:6379
-      FRONTEND_URL: http://localhost:3000
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-waadmin}:${MONGO_ROOT_PASSWORD:-changeme_mongo_password}@mongodb:27017/whatsapp-saas?authSource=admin
+      REDIS_URL: redis://:${REDIS_PASSWORD:-changeme_redis_password}@redis:6379
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
     depends_on:
       - mongodb
       - redis
@@ -59,8 +61,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:5000/api/v1
-      NEXT_PUBLIC_SOCKET_URL: http://localhost:5000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:5000/api/v1}
+      NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_SOCKET_URL:-http://localhost:5000}
     depends_on:
       - backend
     networks:

@@ -58,36 +58,58 @@ export default function CustomerDashboard() {
       return;
     }
 
-    if (!window.FB) {
-      setError("Facebook SDK not loaded. Please refresh the page.");
-      return;
-    }
+    setIsConnecting(true);
 
-    window.FB.login(
-      async (response) => {
-        if (response.authResponse?.code) {
-          try {
-            setIsConnecting(true);
-            await tenantAPI.embeddedSignup(response.authResponse.code);
-            await loadUser();
-            await loadData();
-          } catch (err: unknown) {
-            const error = err as { response?: { data?: { message?: string } } };
-            setError(error.response?.data?.message || "Failed to connect WhatsApp. Please try again.");
-          } finally {
-            setIsConnecting(false);
+    // Wait for FB SDK to load (up to 10s)
+    const waitForFB = (): Promise<void> =>
+      new Promise((resolve, reject) => {
+        if (window.FB) return resolve();
+        let elapsed = 0;
+        const interval = setInterval(() => {
+          elapsed += 200;
+          if (window.FB) { clearInterval(interval); resolve(); }
+          else if (elapsed >= 10000) { clearInterval(interval); reject(new Error("timeout")); }
+        }, 200);
+      });
+
+    waitForFB()
+      .then(() => {
+        window.FB.login(
+          (response) => {
+            if (response.authResponse?.code) {
+              setIsConnecting(true);
+              tenantAPI
+                .embeddedSignup(response.authResponse.code)
+                .then(async () => {
+                  await loadUser();
+                  await loadData();
+                })
+                .catch((err: unknown) => {
+                  const error = err as { response?: { data?: { message?: string } } };
+                  setError(error.response?.data?.message || "Failed to connect WhatsApp. Please try again.");
+                })
+                .finally(() => setIsConnecting(false));
+            } else {
+              setError("WhatsApp signup was cancelled. Please try again.");
+              setIsConnecting(false);
+            }
+          },
+          {
+            config_id: configId,
+            response_type: "code",
+            override_default_response_type: true,
+            extras: {
+              setup: {},
+            },
           }
-        }
-      },
-      {
-        config_id: configId,
-        response_type: "code",
-        override_default_response_type: true,
-        extras: {
-          setup: {},
-        },
-      }
-    );
+        );
+      })
+      .catch(() => {
+        setError(
+          "Facebook SDK failed to load. Please ensure you are using HTTPS (FB.login requires it) and that connect.facebook.net is not blocked by your browser or ad-blocker."
+        );
+        setIsConnecting(false);
+      });
   };
 
   const isConnected = tenant?.onboardingStatus === "connected";

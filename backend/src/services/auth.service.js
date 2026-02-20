@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Tenant = require('../models/Tenant');
 const env = require('../config/env');
 const { ApiError } = require('../middlewares/error.middleware');
+const logger = require('../utils/logger');
 
 /**
  * Generate JWT token for a user
@@ -23,8 +24,8 @@ const generateToken = (user) => {
 /**
  * Login user with email and password
  */
-const login = async (email, password) => {
-  const user = await User.findOne({ email, isActive: true }).select('+password').populate('tenant');
+const login = async (email, password, twoFactorToken = null) => {
+  const user = await User.findOne({ email, isActive: true }).select('+password +twoFactorSecret').populate('tenant');
   if (!user) {
     throw new ApiError(401, 'Invalid email or password');
   }
@@ -32,6 +33,28 @@ const login = async (email, password) => {
   const isPasswordValid = await user.comparePassword(password);
   if (!isPasswordValid) {
     throw new ApiError(401, 'Invalid email or password');
+  }
+
+  // 2FA check
+  if (user.twoFactorEnabled) {
+    if (!twoFactorToken) {
+      // Return partial response indicating 2FA is needed
+      return {
+        requires2FA: true,
+        userId: user._id,
+      };
+    }
+    // Validate TOTP
+    try {
+      const otplib = require('otplib');
+      const isValid = otplib.authenticator.verify({ token: twoFactorToken, secret: user.twoFactorSecret });
+      if (!isValid) {
+        throw new ApiError(401, 'Invalid 2FA code');
+      }
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(401, 'Invalid 2FA code');
+    }
   }
 
   // Update last login
@@ -83,6 +106,14 @@ const customerRegister = async ({ email, password, name, businessName }) => {
   const populated = await User.findById(user._id).populate('tenant');
   const token = generateToken(populated);
 
+  // Send welcome email (best-effort)
+  try {
+    const emailService = require('./email.service');
+    await emailService.sendWelcomeEmail(email, name, businessName);
+  } catch (emailErr) {
+    logger.debug(`Welcome email failed: ${emailErr.message}`);
+  }
+
   return {
     token,
     user: {
@@ -130,6 +161,17 @@ const register = async ({ email, password, name, role, tenantId }, createdBy = n
 
   const populated = await User.findById(user._id).populate('tenant');
   const token = generateToken(populated);
+
+  // Send team invite email (best-effort)
+  if (createdBy) {
+    try {
+      const emailService = require('./email.service');
+      const teamName = populated.tenant?.name || 'the team';
+      await emailService.sendTeamInviteEmail(email, name, teamName, createdBy.name);
+    } catch (emailErr) {
+      logger.debug(`Team invite email failed: ${emailErr.message}`);
+    }
+  }
 
   return {
     token,
@@ -191,4 +233,107 @@ const removeTeamMember = async (memberId, requestingUser) => {
   return member;
 };
 
-module.exports = { login, customerRegister, register, getProfile, generateToken, getTeamMembers, removeTeamMember };
+// =========== Two-Factor Auth (TOTP) ===========
+
+/**
+ * Enable 2FA — generate secret and return QR URL
+ */
+const enable2FA = async (userId) => {
+  let otplib;
+  try {
+    otplib = require('otplib');
+  } catch {
+    throw new ApiError(503, '2FA not available — otplib package not installed');
+  }
+
+  const user = await User.findById(userId).select('+twoFactorSecret');
+  if (!user) throw new ApiError(404, 'User not found');
+  if (user.twoFactorEnabled) throw new ApiError(400, '2FA is already enabled');
+
+  const secret = otplib.authenticator.generateSecret();
+  user.twoFactorSecret = secret;
+  await user.save({ validateBeforeSave: false });
+
+  const otpauthUrl = otplib.authenticator.keyuri(user.email, 'WhatsApp SaaS', secret);
+
+  return { secret, otpauthUrl };
+};
+
+/**
+ * Verify the TOTP code and finalize 2FA enable
+ */
+const verify2FA = async (userId, token) => {
+  let otplib;
+  try {
+    otplib = require('otplib');
+  } catch {
+    throw new ApiError(503, '2FA not available');
+  }
+
+  const user = await User.findById(userId).select('+twoFactorSecret');
+  if (!user) throw new ApiError(404, 'User not found');
+  if (!user.twoFactorSecret) throw new ApiError(400, 'Call enable 2FA first');
+
+  const isValid = otplib.authenticator.verify({ token, secret: user.twoFactorSecret });
+  if (!isValid) throw new ApiError(400, 'Invalid 2FA code');
+
+  user.twoFactorEnabled = true;
+  await user.save({ validateBeforeSave: false });
+
+  // Send confirmation email
+  try {
+    const emailService = require('./email.service');
+    await emailService.send2FAEnabledEmail(user.email, user.name);
+  } catch (err) {
+    logger.debug(`2FA enabled email failed: ${err.message}`);
+  }
+
+  return { enabled: true };
+};
+
+/**
+ * Disable 2FA
+ */
+const disable2FA = async (userId, token) => {
+  let otplib;
+  try {
+    otplib = require('otplib');
+  } catch {
+    throw new ApiError(503, '2FA not available');
+  }
+
+  const user = await User.findById(userId).select('+twoFactorSecret');
+  if (!user) throw new ApiError(404, 'User not found');
+  if (!user.twoFactorEnabled) throw new ApiError(400, '2FA is not enabled');
+
+  const isValid = otplib.authenticator.verify({ token, secret: user.twoFactorSecret });
+  if (!isValid) throw new ApiError(400, 'Invalid 2FA code');
+
+  user.twoFactorEnabled = false;
+  user.twoFactorSecret = null;
+  await user.save({ validateBeforeSave: false });
+
+  return { enabled: false };
+};
+
+/**
+ * Validate 2FA during login (called after password check)
+ */
+const validate2FALogin = async (userId, token) => {
+  let otplib;
+  try {
+    otplib = require('otplib');
+  } catch {
+    throw new ApiError(503, '2FA not available');
+  }
+
+  const user = await User.findById(userId).select('+twoFactorSecret');
+  if (!user) throw new ApiError(404, 'User not found');
+
+  const isValid = otplib.authenticator.verify({ token, secret: user.twoFactorSecret });
+  if (!isValid) throw new ApiError(401, 'Invalid 2FA code');
+
+  return true;
+};
+
+module.exports = { login, customerRegister, register, getProfile, generateToken, getTeamMembers, removeTeamMember, enable2FA, verify2FA, disable2FA, validate2FALogin };

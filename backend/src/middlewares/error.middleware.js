@@ -81,4 +81,11 @@ const errorHandler = (err, req, res, next) => {
   res.status(statusCode).json(response);
 };
 
-module.exports = { ApiError, notFound, errorHandler };
+/**
+ * Wrap an async route handler so thrown errors are forwarded to next()
+ */
+const catchAsync = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
+
+module.exports = { ApiError, notFound, errorHandler, catchAsync };

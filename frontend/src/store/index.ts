@@ -64,10 +64,14 @@ interface AuthState {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  requires2FA: boolean;
+  pendingLoginEmail: string | null;
+  pendingLoginPassword: string | null;
+  login: (email: string, password: string, twoFactorToken?: string) => Promise<void>;
   customerRegister: (data: { email: string; password: string; name: string; businessName: string }) => Promise<void>;
   logout: () => void;
   loadUser: () => Promise<void>;
+  clear2FA: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -75,14 +79,24 @@ export const useAuthStore = create<AuthState>((set) => ({
   token: typeof window !== "undefined" ? localStorage.getItem("token") : null,
   isLoading: true,
   isAuthenticated: false,
+  requires2FA: false,
+  pendingLoginEmail: null,
+  pendingLoginPassword: null,
 
-  login: async (email: string, password: string) => {
-    const res = await authAPI.login(email, password);
-    const { token, user } = res.data.data;
+  login: async (email: string, password: string, twoFactorToken?: string) => {
+    const res = await authAPI.login(email, password, twoFactorToken);
+    const data = res.data.data;
+
+    if (data.requires2FA) {
+      set({ requires2FA: true, pendingLoginEmail: email, pendingLoginPassword: password, isLoading: false });
+      return;
+    }
+
+    const { token, user } = data;
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
     connectSocket(token);
-    set({ user, token, isAuthenticated: true, isLoading: false });
+    set({ user, token, isAuthenticated: true, isLoading: false, requires2FA: false, pendingLoginEmail: null, pendingLoginPassword: null });
   },
 
   customerRegister: async (data) => {
@@ -98,7 +112,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     disconnectSocket();
-    set({ user: null, token: null, isAuthenticated: false, isLoading: false });
+    set({ user: null, token: null, isAuthenticated: false, isLoading: false, requires2FA: false, pendingLoginEmail: null, pendingLoginPassword: null });
+  },
+
+  clear2FA: () => {
+    set({ requires2FA: false, pendingLoginEmail: null, pendingLoginPassword: null });
   },
 
   loadUser: async () => {
