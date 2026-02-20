@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import api from "@/lib/api";
 
-export default function DataDeletionPage() {
+function DataDeletionContent() {
   const searchParams = useSearchParams();
   const codeFromUrl = searchParams.get("code");
 
@@ -235,5 +235,13 @@ export default function DataDeletionPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function DataDeletionPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><div className="animate-spin h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full" /></div>}>
+      <DataDeletionContent />
+    </Suspense>
   );
 }
