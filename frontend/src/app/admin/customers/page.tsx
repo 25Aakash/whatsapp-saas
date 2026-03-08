@@ -51,7 +51,8 @@ export default function AdminCustomersPage() {
     try {
       setIsLoading(true);
       const res = await tenantAPI.list();
-      setTenants(res.data.data.tenants || []);
+      const allTenants = res.data.data.tenants || [];
+      setTenants(allTenants.filter((t: Tenant & { isActive?: boolean }) => t.isActive !== false));
     } catch (err) {
       console.error("Failed to load tenants:", err);
     } finally {
