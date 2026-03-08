@@ -11,8 +11,12 @@ import {
   Phone,
   Calendar,
   Users,
+  Plus,
+  Trash2,
+  X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface CustomerUser {
   _id: string;
@@ -28,6 +32,16 @@ export default function AdminCustomersPage() {
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [teamMembers, setTeamMembers] = useState<CustomerUser[]>([]);
   const [isLoadingTeam, setIsLoadingTeam] = useState(false);
+
+  // Add Customer modal state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState({ name: "", email: "", password: "", businessName: "" });
+  const [isAdding, setIsAdding] = useState(false);
+  const [addError, setAddError] = useState("");
+
+  // Delete confirmation state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadTenants();
@@ -62,6 +76,39 @@ export default function AdminCustomersPage() {
     loadTeam(tenant._id);
   };
 
+  const handleAddCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddError("");
+    setIsAdding(true);
+    try {
+      await authAPI.customerRegister(addForm);
+      setShowAddModal(false);
+      setAddForm({ name: "", email: "", password: "", businessName: "" });
+      await loadTenants();
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setAddError(error.response?.data?.message || "Failed to create customer");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleDeleteCustomer = async () => {
+    if (!selectedTenant) return;
+    setIsDeleting(true);
+    try {
+      await tenantAPI.delete(selectedTenant._id);
+      setSelectedTenant(null);
+      setTeamMembers([]);
+      setShowDeleteConfirm(false);
+      await loadTenants();
+    } catch (err) {
+      console.error("Failed to delete customer:", err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const filtered = tenants.filter((t) =>
     t.name.toLowerCase().includes(search.toLowerCase()) ||
     (t.displayPhoneNumber || "").includes(search)
@@ -76,12 +123,21 @@ export default function AdminCustomersPage() {
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">
               Customers
             </h1>
-            <button
-              onClick={loadTenants}
-              className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800"
-            >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="rounded-lg p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                title="Add Customer"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+              <button
+                onClick={loadTenants}
+                className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800"
+              >
+                <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+              </button>
+            </div>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -149,18 +205,27 @@ export default function AdminCustomersPage() {
         {selectedTenant ? (
           <>
             <div className="mb-8">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-gray-700 text-xl font-bold dark:bg-gray-700 dark:text-gray-300">
-                  {selectedTenant.name.charAt(0).toUpperCase()}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-gray-700 text-xl font-bold dark:bg-gray-700 dark:text-gray-300">
+                    {selectedTenant.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                      {selectedTenant.name}
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Plan: {selectedTenant.plan || "Free"}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                    {selectedTenant.name}
-                  </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Plan: {selectedTenant.plan || "Free"}
-                  </p>
-                </div>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="rounded-lg p-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  title="Delete Customer"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
               </div>
             </div>
 
@@ -236,6 +301,140 @@ export default function AdminCustomersPage() {
           </div>
         )}
       </div>
+
+      {/* Add Customer Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-gray-900">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                Add New Customer
+              </h2>
+              <button
+                onClick={() => { setShowAddModal(false); setAddError(""); }}
+                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddCustomer} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Full Name
+                </label>
+                <Input
+                  required
+                  value={addForm.name}
+                  onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
+                  placeholder="John Doe"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Email
+                </label>
+                <Input
+                  type="email"
+                  required
+                  value={addForm.email}
+                  onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
+                  placeholder="john@company.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Password
+                </label>
+                <Input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={addForm.password}
+                  onChange={(e) => setAddForm({ ...addForm, password: e.target.value })}
+                  placeholder="Min 6 characters"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Business Name
+                </label>
+                <Input
+                  required
+                  value={addForm.businessName}
+                  onChange={(e) => setAddForm({ ...addForm, businessName: e.target.value })}
+                  placeholder="Company Inc."
+                />
+              </div>
+
+              {addError && (
+                <div className="rounded-lg bg-red-50 px-4 py-2.5 text-sm text-red-600 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
+                  {addError}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => { setShowAddModal(false); setAddError(""); }}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" className="flex-1" disabled={isAdding}>
+                  {isAdding ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    "Add Customer"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && selectedTenant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl dark:bg-gray-900">
+            <div className="flex flex-col items-center text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
+                <Trash2 className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                Delete Customer
+              </h3>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Are you sure you want to delete <strong>{selectedTenant.name}</strong>?
+                This will deactivate their account and disconnect their WhatsApp.
+              </p>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={handleDeleteCustomer}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  "Delete"
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
