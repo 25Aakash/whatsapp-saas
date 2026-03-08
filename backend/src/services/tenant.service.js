@@ -204,7 +204,15 @@ const updateTenant = async (tenantId, updates) => {
 const deactivateTenant = async (tenantId) => {
   const tenant = await Tenant.findByIdAndUpdate(
     tenantId,
-    { isActive: false, onboardingStatus: 'disconnected' },
+    {
+      isActive: false,
+      onboardingStatus: 'disconnected',
+      phoneNumberId: null,
+      businessAccountId: null,
+      displayPhoneNumber: null,
+      accessToken: null,
+      qualityRating: null,
+    },
     { new: true }
   );
   if (!tenant) {
