@@ -162,7 +162,7 @@ app.post('/api/v1/data-deletion', async (req, res) => {
   }
 
   const confirmationCode = `DEL-${Date.now().toString(36).toUpperCase()}`;
-  const statusUrl = `${env.frontendUrl || 'http://localhost:3000'}/data-deletion/status?code=${confirmationCode}`;
+  const statusUrl = `${env.frontendUrl}/data-deletion/status?code=${confirmationCode}`;
 
   logger.info('Data deletion verified', { fbUserId, confirmationCode });
 
@@ -352,7 +352,7 @@ const start = async () => {
     server.listen(env.port, () => {
       logger.info(`Server running on port ${env.port} (${env.nodeEnv})`);
       logger.info(`Frontend URL: ${env.frontendUrl}`);
-      logger.info(`Health check: http://localhost:${env.port}/api/v1/health`);
+      logger.info(`Health check: /api/v1/health (port ${env.port})`);
     });
   } catch (error) {
     logger.error('Failed to start server:', error);

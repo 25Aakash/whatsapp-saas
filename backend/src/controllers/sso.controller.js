@@ -33,7 +33,7 @@ const callback = catchAsync(async (req, res) => {
   }
 
   // Redirect to frontend with token
-  const frontendUrl = env.frontendUrl || 'http://localhost:3000';
+  const frontendUrl = env.frontendUrl;
   const redirectUrl = `${frontendUrl}/dashboard?sso_token=${result.token}`;
   res.redirect(redirectUrl);
 });

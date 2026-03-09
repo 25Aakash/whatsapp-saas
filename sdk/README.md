@@ -15,7 +15,7 @@ const WhatsAppSaaS = require('whatsapp-saas-sdk');
 
 const client = new WhatsAppSaaS({
   apiKey: 'your-api-key',
-  baseUrl: 'https://api.yourdomain.com/api/v1',
+  baseUrl: 'https://app.karssoft.com/api/v1',
 });
 
 // Send a text message

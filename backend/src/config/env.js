@@ -19,14 +19,14 @@ const env = {
   webhookCallbackUrl: process.env.WEBHOOK_CALLBACK_URL,
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
   // Comma-separated list of allowed origins (e.g., "https://app.example.com,https://admin.example.com")
-  corsOrigins: process.env.CORS_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:3000,https://localhost:3000',
+  corsOrigins: process.env.CORS_ORIGINS || process.env.FRONTEND_URL || '',
 
   // SMTP / Email
   smtpHost: process.env.SMTP_HOST || '',
   smtpPort: parseInt(process.env.SMTP_PORT, 10) || 587,
   smtpUser: process.env.SMTP_USER || '',
   smtpPass: process.env.SMTP_PASS || '',
-  smtpFrom: process.env.SMTP_FROM || 'noreply@yourdomain.com',
+  smtpFrom: process.env.SMTP_FROM || 'noreply@karssoft.com',
 
   // Sandbox / test mode
   sandboxMode: process.env.SANDBOX_MODE === 'true',

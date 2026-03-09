@@ -11,17 +11,19 @@ const swaggerDefinition = {
     contact: { name: 'API Support' },
     license: { name: 'Proprietary' },
   },
-  servers: [
-    {
-      url: `http://localhost:${env.port}/api/v1`,
-      description: 'Local development',
-    },
-    {
-      url: '{baseUrl}/api/v1',
-      description: 'Production',
-      variables: { baseUrl: { default: 'https://api.yourdomain.com' } },
-    },
-  ],
+  servers: env.isProd
+    ? [
+        {
+          url: `${env.frontendUrl}/api/v1`,
+          description: 'Production',
+        },
+      ]
+    : [
+        {
+          url: `http://localhost:${env.port}/api/v1`,
+          description: 'Local development',
+        },
+      ],
   components: {
     securitySchemes: {
       BearerAuth: {

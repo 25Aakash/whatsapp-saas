@@ -8,7 +8,7 @@ const axios = require('axios');
  *   const WhatsAppSaaS = require('whatsapp-saas-sdk');
  *   const client = new WhatsAppSaaS({
  *     apiKey: 'your-api-key',
- *     baseUrl: 'https://api.yourdomain.com/api/v1',
+ *     baseUrl: 'https://app.karssoft.com/api/v1',
  *   });
  *
  *   // Send a message
@@ -16,7 +16,7 @@ const axios = require('axios');
  */
 
 class WhatsAppSaaS {
-  constructor({ apiKey, baseUrl = 'http://localhost:5000/api/v1', timeout = 30000 } = {}) {
+  constructor({ apiKey, baseUrl = 'https://app.karssoft.com/api/v1', timeout = 30000 } = {}) {
     if (!apiKey) throw new Error('apiKey is required');
 
     this.client = axios.create({

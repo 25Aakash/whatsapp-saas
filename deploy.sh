@@ -216,13 +216,13 @@ sleep 5
 echo ""
 echo "Verifying deployment..."
 
-if curl -sf http://127.0.0.1:5000/api/v1/health > /dev/null 2>&1; then
+if curl -sf http://127.0.0.1:5001/api/v1/health > /dev/null 2>&1; then
     echo "  ✓ Backend API is running"
 else
     echo "  ✗ Backend not responding yet (check: pm2 logs wa-saas-backend)"
 fi
 
-if curl -sf http://127.0.0.1:3000 > /dev/null 2>&1; then
+if curl -sf http://127.0.0.1:3001 > /dev/null 2>&1; then
     echo "  ✓ Frontend is running"
 else
     echo "  ✗ Frontend not responding yet (check: pm2 logs wa-saas-frontend)"
